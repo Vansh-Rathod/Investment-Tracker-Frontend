@@ -1,44 +1,104 @@
-// Mutual Fund SIP Interface
-export interface MutualFundSIP {
-  id: string
-  orderId: string
-  amcName: string
-  schemeName: string
-  folioNumber: string
+export interface Portfolio {
+  portfolioId: number
+  name: string
+  userId: number
+  portfolioType: number
+  portfolioTypeName: string
+  createdDate: string
+  modifiedDate?: string
+  totalInvested: number
+  stockCount: number
+  mutualFundCount: number
+}
+
+export interface CreatePortfolioRequest {
+  name: string
+  portfolioType: number // 1 = Mixed, 2 = Stocks, 3 = Mutual Funds
+}
+
+export interface UpdatePortfolioRequest {
+  portfolioId: number
+  name: string
+  portfolioType: number
+}
+
+export interface SIP {
+  sipId: number
+  portfolioId: number
+  portfolioName: string
+  portfolioType: number
+  portfolioTypeName: string
+  assetTypeId: number
+  assetTypeName: string
+  assetId: number
+  assetName: string
+  amcName?: string
+  categoryName?: string
   sipAmount: number
-  sipDate: number // Day of month (1-28)
+  frequency: number
+  frequencyName: string
+  sipDate: string
   startDate: string
   endDate?: string
-  frequency: "monthly" | "quarterly" | "weekly"
-  nav: number // NAV at purchase
-  currentNav: number
+  sipStatus: number
+  sipStatusName: string
+  createdDate: string
+  modifiedDate?: string
+}
+
+export interface CreateSIPRequest {
+  portfolioId: number
+  assetTypeId: number
+  assetId: number
+  sipAmount: number
+  frequency: number
+  sipDate: string
+  startDate: string
+  endDate?: string
+}
+
+export interface UpdateSIPRequest {
+  sipId: number
+  sipAmount: number
+  frequency: number
+  sipDate: string
+  endDate?: string
+}
+
+export interface Transaction {
+  transactionId: number
+  portfolioId: number
+  portfolioName: string
+  portfolioType: number
+  portfolioTypeName: string
+  assetTypeId: number
+  assetTypeName: string
+  assetId: number
+  assetName: string
+  amcName?: string
+  categoryName?: string
+  transactionType: number
+  transactionTypeName: string
   units: number
-  investedValue: number
-  currentValue: number
-  returns: number
-  returnsPercentage: number
-  status: "active" | "paused" | "completed"
+  price: number
+  amount: number
+  transactionDate: string
+  sourceType?: string
+  sourceId?: number
+  createdDate: string
+  modifiedDate?: string
 }
 
-// Stock Investment Interface
-export interface StockInvestment {
-  id: string
-  symbol: string
-  companyName: string
-  exchange: "NSE" | "BSE"
-  quantity: number
-  averagePrice: number
-  currentPrice: number
-  investedValue: number
-  currentValue: number
-  returns: number
-  returnsPercentage: number
-  purchaseDate: string
-  sector: string
+export interface TransactionFilter {
+  portfolioId?: number
+  assetId?: number
+  assetTypeId?: number
+  transactionType?: number
+  fromDate?: string
+  toDate?: string
 }
 
-// Portfolio Summary Interface
-export interface PortfolioSummary {
+export interface DashboardSummary {
   totalInvested: number
   currentValue: number
   totalReturns: number
@@ -49,46 +109,24 @@ export interface PortfolioSummary {
   stocksCount: number
 }
 
-// Chart Data Interfaces
 export interface AllocationData {
   name: string
   value: number
-  fill: string
+  percentage: number
+  fill?: string
 }
 
 export interface PerformanceData {
-  month: string
+  period: string
   mutualFunds: number
   stocks: number
   total: number
 }
 
-// API Response Types
+// API Response Wrapper
 export interface ApiResponse<T> {
   data: T
   success: boolean
   message?: string
-}
-
-// Form Types
-export interface MutualFundSIPFormData {
-  amcName: string
-  schemeName: string
-  folioNumber: string
-  sipAmount: number
-  sipDate: number
-  startDate: string
-  endDate?: string
-  frequency: "monthly" | "quarterly" | "weekly"
-  nav: number
-}
-
-export interface StockFormData {
-  symbol: string
-  companyName: string
-  exchange: "NSE" | "BSE"
-  quantity: number
-  averagePrice: number
-  purchaseDate: string
-  sector: string
+  errors?: string[]
 }

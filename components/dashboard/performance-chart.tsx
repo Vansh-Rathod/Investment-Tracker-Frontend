@@ -29,7 +29,7 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis dataKey="month" className="text-xs" tick={{ fill: "var(--color-muted-foreground)" }} />
+              <XAxis dataKey="period" className="text-xs" tick={{ fill: "var(--color-muted-foreground)" }} />
               <YAxis
                 className="text-xs"
                 tick={{ fill: "var(--color-muted-foreground)" }}

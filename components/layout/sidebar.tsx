@@ -3,12 +3,15 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { LayoutDashboard, TrendingUp, Briefcase, Settings } from "lucide-react"
+import { LayoutDashboard, TrendingUp, History, Repeat, PieChart, Settings } from "lucide-react"
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "SIPs", href: "/sips", icon: Repeat },
+  { name: "Transactions", href: "/transactions", icon: History },
+  { name: "Portfolios", href: "/portfolios", icon: PieChart },
   { name: "Mutual Funds", href: "/mutual-funds", icon: TrendingUp },
-  { name: "Stocks", href: "/stocks", icon: Briefcase },
+  // { name: "Stocks", href: "/stocks", icon: Briefcase }, // Keeping validation pending
   { name: "Settings", href: "/settings", icon: Settings },
 ]
 

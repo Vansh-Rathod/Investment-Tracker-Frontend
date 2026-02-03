@@ -1,10 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingUp, TrendingDown, Wallet, BarChart3 } from "lucide-react"
-import type { PortfolioSummary } from "@/types"
+import type { DashboardSummary } from "@/types"
 import { cn } from "@/lib/utils"
 
 interface SummaryCardsProps {
-  summary: PortfolioSummary
+  summary: DashboardSummary
 }
 
 export function SummaryCards({ summary }: SummaryCardsProps) {
