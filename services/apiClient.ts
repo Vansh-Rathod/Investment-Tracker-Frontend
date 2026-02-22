@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5273/api';
+
+// PORTS: https: 7202 or http: 5273
 
 // Create axios instance with default config
 const apiClient = axios.create({

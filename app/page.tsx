@@ -6,12 +6,14 @@ import { SummaryCards } from "@/components/dashboard/summary-cards"
 import { AllocationChart } from "@/components/dashboard/allocation-chart"
 import { PerformanceChart } from "@/components/dashboard/performance-chart"
 import { dashboardService } from "@/services/dashboardService"
-import { usePortfolio } from "@/components/providers/portfolio-provider"
+import { exportService } from "@/services/exportService"
 import { DashboardSummary, AllocationData, PerformanceData } from "@/types"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
+import { Download } from "lucide-react"
+import { toast } from "sonner"
 
 export default function DashboardPage() {
-  const { selectedPortfolioId } = usePortfolio()
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
   const [allocation, setAllocation] = useState<AllocationData[]>([])
   const [performance, setPerformance] = useState<PerformanceData[]>([])
@@ -23,16 +25,16 @@ export default function DashboardPage() {
       setIsLoading(true)
       try {
         const [summaryRes, allocationRes, performanceRes, sectorRes] = await Promise.all([
-          dashboardService.getSummary(selectedPortfolioId || undefined),
-          dashboardService.getAssetAllocation(selectedPortfolioId || undefined),
-          dashboardService.getPerformance(selectedPortfolioId || undefined),
-          dashboardService.getSectorAllocation(selectedPortfolioId || undefined),
+          dashboardService.getSummary(),
+          dashboardService.getAssetAllocation(),
+          dashboardService.getPerformance(6),
+          dashboardService.getSectorAllocation(),
         ])
 
-        if (summaryRes.success) setSummary(summaryRes.data)
-        if (allocationRes.success) setAllocation(allocationRes.data)
-        if (performanceRes.success) setPerformance(performanceRes.data)
-        if (sectorRes.success) setSectorAllocation(sectorRes.data)
+        if (summaryRes.success && summaryRes.data) setSummary(summaryRes.data as DashboardSummary)
+        if (allocationRes.success && allocationRes.data) setAllocation(allocationRes.data)
+        if (performanceRes.success && performanceRes.data) setPerformance(performanceRes.data)
+        if (sectorRes.success && sectorRes.data) setSectorAllocation(sectorRes.data)
       } catch (error) {
         console.error("Failed to fetch dashboard data", error)
       } finally {
@@ -41,7 +43,7 @@ export default function DashboardPage() {
     }
 
     fetchData()
-  }, [selectedPortfolioId])
+  }, [])
 
   if (isLoading) {
     return (
@@ -59,9 +61,24 @@ export default function DashboardPage() {
     )
   }
 
+  const handleExportAll = async () => {
+    try {
+      await exportService.downloadExport("all")
+      toast.success("Export started")
+    } catch (e) {
+      toast.error("Export failed")
+    }
+  }
+
   return (
     <MainLayout title="Dashboard">
       <div className="space-y-6">
+        <div className="flex justify-end">
+          <Button variant="outline" size="sm" onClick={handleExportAll}>
+            <Download className="mr-2 h-4 w-4" />
+            Export All
+          </Button>
+        </div>
         {summary && <SummaryCards summary={summary} />}
 
         <div className="grid gap-6 lg:grid-cols-2">

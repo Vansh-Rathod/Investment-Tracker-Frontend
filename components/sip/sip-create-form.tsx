@@ -31,12 +31,13 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { usePortfolio } from "@/components/providers/portfolio-provider"
 import { sipService } from "@/services/sipService"
+import { stockService } from "@/services/stockService"
+import { mutualFundService } from "@/services/mutualFundService"
 import { toast } from "sonner"
+import type { StockViewModel, MutualFundViewModel } from "@/types"
 
 const formSchema = z.object({
-    portfolioId: z.string().min(1, { message: "Portfolio is required" }),
     assetTypeId: z.string().min(1, { message: "Asset type is required" }),
     assetId: z.string().min(1, { message: "Asset is required" }),
     sipAmount: z.coerce.number().min(100, { message: "Amount must be at least 100" }),
@@ -50,35 +51,45 @@ interface SIPCreateFormProps {
 }
 
 export function SIPCreateForm({ onSuccess }: SIPCreateFormProps) {
-    const { portfolios } = usePortfolio()
     const [isLoading, setIsLoading] = useState(false)
+    const [stocks, setStocks] = useState<StockViewModel[]>([])
+    const [mutualFunds, setMutualFunds] = useState<MutualFundViewModel[]>([])
 
-    // TODO: Fetch assets based on type (Stocks/MFs)
-    // For now mocking assets
-    const assets = [
-        { id: "1", name: "Reliance Industries", type: "1" },
-        { id: "2", name: "HDFC Bank", type: "1" },
-        { id: "3", name: "SBI Bluechip Fund", type: "2" },
-        { id: "4", name: "Axis Small Cap Fund", type: "2" },
-    ]
+    useEffect(() => {
+        async function loadAssets() {
+            try {
+                const [stocksRes, mfRes] = await Promise.all([
+                    stockService.getMarketStocks({ page: 1, pageSize: 200 }),
+                    mutualFundService.getMarketMutualFunds({ page: 1, pageSize: 200 }),
+                ])
+                if (stocksRes.success && stocksRes.data) setStocks(stocksRes.data)
+                if (mfRes.success && mfRes.data) setMutualFunds(mfRes.data)
+            } catch (e) {
+                console.error("Failed to load assets", e)
+            }
+        }
+        loadAssets()
+    }, [])
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            portfolioId: "",
-            assetTypeId: "2", // Default to Mutual Fund
+            assetTypeId: "2",
             assetId: "",
             sipAmount: 5000,
-            frequency: "3", // Monthly
+            frequency: "3",
         },
     })
+
+    const assetTypeId = form.watch("assetTypeId")
+    const assets = assetTypeId === "1"
+        ? stocks.map((s) => ({ id: String(s.stockId), name: s.stockName || s.symbol }))
+        : mutualFunds.map((m) => ({ id: String(m.fundId), name: m.fundName }))
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try {
             setIsLoading(true)
-            // Call API
             const requestData = {
-                portfolioId: parseInt(values.portfolioId),
                 assetTypeId: parseInt(values.assetTypeId),
                 assetId: parseInt(values.assetId),
                 sipAmount: values.sipAmount,
@@ -86,10 +97,13 @@ export function SIPCreateForm({ onSuccess }: SIPCreateFormProps) {
                 startDate: values.startDate.toISOString(),
                 sipDate: values.sipDate.toISOString(),
             }
-            await sipService.createSIP(requestData)
-
-            toast.success("SIP created successfully")
-            onSuccess()
+            const res = await sipService.createSIP(requestData)
+            if (res.success) {
+                toast.success("SIP created successfully")
+                onSuccess()
+            } else {
+                toast.error(res.message || "Failed to create SIP")
+            }
         } catch (error) {
             toast.error("Failed to create SIP")
         } finally {
@@ -100,31 +114,6 @@ export function SIPCreateForm({ onSuccess }: SIPCreateFormProps) {
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                    control={form.control}
-                    name="portfolioId"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Portfolio</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select portfolio" />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {portfolios.map((p) => (
-                                        <SelectItem key={p.portfolioId} value={p.portfolioId.toString()}>
-                                            {p.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-
                 <div className="grid grid-cols-2 gap-4">
                     <FormField
                         control={form.control}
@@ -132,7 +121,13 @@ export function SIPCreateForm({ onSuccess }: SIPCreateFormProps) {
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Type</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <Select
+                                    onValueChange={(v) => {
+                                        field.onChange(v)
+                                        form.setValue("assetId", "")
+                                    }}
+                                    value={field.value}
+                                >
                                     <FormControl>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Type" />
@@ -154,20 +149,22 @@ export function SIPCreateForm({ onSuccess }: SIPCreateFormProps) {
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Asset</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <Select
+                                    onValueChange={(v) => { field.onChange(v) }}
+                                    value={field.value}
+                                    disabled={assets.length === 0}
+                                >
                                     <FormControl>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select asset" />
+                                            <SelectValue placeholder={assets.length === 0 ? "Loading..." : "Select asset"} />
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        {assets
-                                            .filter(a => a.type === form.watch("assetTypeId"))
-                                            .map((a) => (
-                                                <SelectItem key={a.id} value={a.id}>
-                                                    {a.name}
-                                                </SelectItem>
-                                            ))}
+                                        {assets.map((a) => (
+                                            <SelectItem key={a.id} value={a.id}>
+                                                {a.name}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />

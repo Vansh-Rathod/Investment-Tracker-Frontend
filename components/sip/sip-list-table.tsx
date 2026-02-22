@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal, Play, Pause, XCircle } from "lucide-react"
+import { MoreHorizontal, Play, Pause, XCircle, Trash2 } from "lucide-react"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -21,6 +21,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { SIP } from "@/types"
 import { formatCurrency, formatDate } from "@/lib/utils"
+
+const FREQUENCY_LABEL: Record<number, string> = { 1: "Daily", 2: "Weekly", 3: "Monthly" }
+const STATUS_LABEL: Record<number, string> = { 1: "Active", 2: "Paused", 3: "Cancelled", 4: "Deleted" }
 
 interface SIPListTableProps {
     sips: SIP[]
@@ -37,10 +40,9 @@ export function SIPListTable({ sips, onPause, onResume, onCancel, onDelete }: SI
                 <TableHeader>
                     <TableRow>
                         <TableHead>Asset</TableHead>
-                        <TableHead>Portfolio</TableHead>
                         <TableHead>Amount</TableHead>
                         <TableHead>Frequency</TableHead>
-                        <TableHead>Next Date</TableHead>
+                        <TableHead>Start / SIP Date</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -48,8 +50,8 @@ export function SIPListTable({ sips, onPause, onResume, onCancel, onDelete }: SI
                 <TableBody>
                     {sips.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={7} className="h-24 text-center">
-                                No active SIPs found.
+                            <TableCell colSpan={6} className="h-24 text-center">
+                                No SIPs found.
                             </TableCell>
                         </TableRow>
                     ) : (
@@ -61,10 +63,14 @@ export function SIPListTable({ sips, onPause, onResume, onCancel, onDelete }: SI
                                         <span className="text-xs text-muted-foreground">{sip.assetTypeName}</span>
                                     </div>
                                 </TableCell>
-                                <TableCell>{sip.portfolioName}</TableCell>
                                 <TableCell>{formatCurrency(sip.sipAmount)}</TableCell>
-                                <TableCell className="capitalize">{sip.frequencyName}</TableCell>
-                                <TableCell>{formatDate(sip.sipDate)}</TableCell>
+                                <TableCell>{FREQUENCY_LABEL[sip.frequency] ?? sip.frequency}</TableCell>
+                                <TableCell>
+                                    <span className="text-muted-foreground text-xs">Start </span>
+                                    {formatDate(sip.startDate)}
+                                    <span className="text-muted-foreground text-xs ml-1"> · SIP day </span>
+                                    {sip.sipDate ? formatDate(sip.sipDate) : "-"}
+                                </TableCell>
                                 <TableCell>
                                     <Badge
                                         variant={
@@ -72,7 +78,7 @@ export function SIPListTable({ sips, onPause, onResume, onCancel, onDelete }: SI
                                                 sip.sipStatus === 2 ? "secondary" : "destructive"
                                         }
                                     >
-                                        {sip.sipStatusName}
+                                        {STATUS_LABEL[sip.sipStatus] ?? sip.sipStatus}
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="text-right">
@@ -99,11 +105,14 @@ export function SIPListTable({ sips, onPause, onResume, onCancel, onDelete }: SI
                                                     <Play className="mr-2 h-4 w-4" /> Resume SIP
                                                 </DropdownMenuItem>
                                             )}
-                                            {sip.sipStatus !== 3 && (
+                                            {(sip.sipStatus === 1 || sip.sipStatus === 2) && (
                                                 <DropdownMenuItem onClick={() => onCancel(sip.sipId)} className="text-destructive">
                                                     <XCircle className="mr-2 h-4 w-4" /> Cancel SIP
                                                 </DropdownMenuItem>
                                             )}
+                                            <DropdownMenuItem onClick={() => onDelete(sip.sipId)} className="text-destructive">
+                                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                            </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>

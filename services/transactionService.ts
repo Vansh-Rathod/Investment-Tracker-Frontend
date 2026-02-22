@@ -1,24 +1,19 @@
 import apiClient from './apiClient';
-import { ApiResponse, Transaction, TransactionFilter } from '@/types';
+import { ApiResponse, Transaction, TransactionFilter, CreateTransactionRequest } from '@/types';
 
 export const transactionService = {
     getTransactions: async (filters?: TransactionFilter): Promise<ApiResponse<Transaction[]>> => {
-        const response = await apiClient.get('/Transaction', { params: filters });
+        const response = await apiClient.get('/Transaction/GetTransactions', { params: filters });
         return response.data;
     },
 
-    getStockTransactions: async (portfolioId?: number): Promise<ApiResponse<Transaction[]>> => {
-        const response = await apiClient.get('/Transaction/stocks', { params: { portfolioId } });
+    getTransactionById: async (id: number): Promise<ApiResponse<Transaction>> => {
+        const response = await apiClient.get(`/Transaction/${id}`);
         return response.data;
     },
 
-    getMutualFundTransactions: async (portfolioId?: number): Promise<ApiResponse<Transaction[]>> => {
-        const response = await apiClient.get('/Transaction/mutual-funds', { params: { portfolioId } });
+    insertTransaction: async (data: CreateTransactionRequest): Promise<ApiResponse<number>> => {
+        const response = await apiClient.post('/Transaction/InsertTransaction', data);
         return response.data;
     },
-
-    getSIPTransactions: async (portfolioId?: number): Promise<ApiResponse<Transaction[]>> => {
-        const response = await apiClient.get('/Transaction/sips', { params: { portfolioId } });
-        return response.data;
-    }
 };

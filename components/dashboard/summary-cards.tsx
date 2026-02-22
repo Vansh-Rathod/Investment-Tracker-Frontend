@@ -9,32 +9,36 @@ interface SummaryCardsProps {
 
 export function SummaryCards({ summary }: SummaryCardsProps) {
   const isPositive = summary.totalReturns >= 0
+  const invested = Number(summary.investedAmount) || 0
+  const current = Number(summary.currentValue) || 0
+  const returns = Number(summary.totalReturns) || 0
+  const returnsPct = Number(summary.absReturns) || 0
 
   const cards = [
     {
       title: "Total Invested",
-      value: `₹${summary.totalInvested.toLocaleString("en-IN")}`,
+      value: `₹${invested.toLocaleString("en-IN")}`,
       icon: Wallet,
       description: "Across all investments",
     },
     {
       title: "Current Value",
-      value: `₹${summary.currentValue.toLocaleString("en-IN")}`,
+      value: `₹${current.toLocaleString("en-IN")}`,
       icon: BarChart3,
       description: "Portfolio worth today",
     },
     {
       title: "Total Returns",
-      value: `₹${Math.abs(summary.totalReturns).toLocaleString("en-IN")}`,
+      value: `₹${Math.abs(returns).toLocaleString("en-IN")}`,
       icon: isPositive ? TrendingUp : TrendingDown,
-      description: `${isPositive ? "+" : "-"}${summary.totalReturnsPercentage.toFixed(2)}%`,
+      description: `${isPositive ? "+" : ""}${returnsPct.toFixed(2)}%`,
       positive: isPositive,
     },
     {
-      title: "Holdings",
-      value: `${summary.mutualFundsCount + summary.stocksCount}`,
+      title: "Stocks vs MFs",
+      value: "Allocation",
       icon: BarChart3,
-      description: `${summary.mutualFundsCount} MFs, ${summary.stocksCount} Stocks`,
+      description: `Stocks ₹${(summary.stockCurrentValue ?? 0).toLocaleString("en-IN")} · MFs ₹${(summary.mfCurrentValue ?? 0).toLocaleString("en-IN")}`,
     },
   ]
 
