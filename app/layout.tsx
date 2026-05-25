@@ -2,6 +2,8 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import { AuthProvider } from "@/components/providers/auth-provider"
+import { AuthGuard } from "@/components/auth/auth-guard"
 import { PortfolioProvider } from "@/components/providers/portfolio-provider"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
@@ -40,10 +42,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`font-sans antialiased`}>
-        <PortfolioProvider>
-          {children}
+        <AuthProvider>
+          <AuthGuard>
+            <PortfolioProvider>
+              {children}
+            </PortfolioProvider>
+          </AuthGuard>
           <Toaster />
-        </PortfolioProvider>
+        </AuthProvider>
         <Analytics />
       </body>
     </html>

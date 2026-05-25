@@ -1,4 +1,5 @@
 import apiClient from './apiClient';
+import { AUTH_TOKEN_KEY } from '@/lib/auth';
 
 const getExportUrl = (type: 'all' | 'stocks' | 'mutual-funds') =>
   `${apiClient.defaults.baseURL}/Export/${type}`;
@@ -6,7 +7,7 @@ const getExportUrl = (type: 'all' | 'stocks' | 'mutual-funds') =>
 export const exportService = {
   /** Trigger download of Excel file for the given export type. */
   downloadExport: async (type: 'all' | 'stocks' | 'mutual-funds'): Promise<void> => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem(AUTH_TOKEN_KEY) : null;
     const url = getExportUrl(type);
     const res = await fetch(url, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},

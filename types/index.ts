@@ -1,3 +1,17 @@
+export interface AuthUser {
+  id: number
+  name: string
+  email: string
+  phoneNumber?: string
+  lastLogin?: string
+}
+
+export interface LoginResponseData {
+  token: string
+  refreshToken: string
+  user: AuthUser
+}
+
 export interface Portfolio {
   portfolioId: number
   name: string

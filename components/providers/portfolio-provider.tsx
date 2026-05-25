@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Portfolio } from '@/types';
 import { portfolioService } from '@/services/portfolioService';
+import { useAuth } from '@/components/providers/auth-provider';
 
 interface PortfolioContextType {
     portfolios: Portfolio[];
@@ -16,9 +17,10 @@ interface PortfolioContextType {
 const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
 
 export function PortfolioProvider({ children }: { children: React.ReactNode }) {
+    const { isAuthenticated, isLoading: authLoading } = useAuth();
     const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
     const [selectedPortfolioId, setSelectedPortfolioId] = useState<number | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
 
     const refreshPortfolios = async () => {
         try {
@@ -40,8 +42,15 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     };
 
     useEffect(() => {
-        refreshPortfolios();
-    }, []);
+        if (!authLoading && isAuthenticated) {
+            refreshPortfolios();
+        }
+        if (!authLoading && !isAuthenticated) {
+            setPortfolios([]);
+            setSelectedPortfolioId(null);
+            setIsLoading(false);
+        }
+    }, [authLoading, isAuthenticated]);
 
     const selectedPortfolio = portfolios.find(p => p.portfolioId === selectedPortfolioId) || null;
 
